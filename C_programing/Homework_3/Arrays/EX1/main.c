@@ -14,7 +14,6 @@ int  main()
 	float a [2][2];
 	float b [2][2];
 
-	float sum [2][2];
  int i=0;
  int y=0;
 
