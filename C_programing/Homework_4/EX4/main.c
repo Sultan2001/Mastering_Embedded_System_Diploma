@@ -11,14 +11,14 @@ int power(int num , int p);
 int main()
 {
 
-int base,pow;
-printf("Enter base number : ");
-fflush(stdin); fflush(stdout);
-scanf("%d",&base);
-printf("Enter power number (positive integer): ");
-fflush(stdin); fflush(stdout);
-scanf("%d",&pow);
-printf("%d",power(base,pow));
+	int base,pow;
+	printf("Enter base number : ");
+	fflush(stdin); fflush(stdout);
+	scanf("%d",&base);
+	printf("Enter power number (positive integer): ");
+	fflush(stdin); fflush(stdout);
+	scanf("%d",&pow);
+	printf("%d",power(base,pow));
 
 	return 0;
 }
