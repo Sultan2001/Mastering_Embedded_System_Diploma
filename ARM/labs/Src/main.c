@@ -20,8 +20,17 @@
 #include "stm32_F103C6_GPIO_Driver.h"
 #include "stm32_F103C6_EXTI_Driver.h"
 #include "stm32f103x6.h"
+typedef enum
+{
+	privileged,
+	nonprivileged
+
+
+}CPU_Access_Level;
+
 void Read_Control_Reg(uint_32* value );
 void Read_IPSR_Reg(uint_32* value );
+void switch_CPU_Access_Level(CPU_Access_Level Level);
 
 uint_32 val1 =0;
 uint_32 val2 =3;
@@ -48,6 +57,7 @@ void EXTI_CallBack()
 		// CPU in handler mode
 	Read_IPSR_Reg(&val5);
 	MCAL_GPIO_TogglePin(GPIOA, GPIO_PIN_0);
+	switch_CPU_Access_Level(privileged);
 }
 
 void EXTI_init()
@@ -91,6 +101,8 @@ __asm("mov r0 , %0"
 // lab6
 	// CPU in thread mode
 	Read_Control_Reg(&val4);
+	switch_CPU_Access_Level(nonprivileged);
+	//switch_CPU_Access_Level(privileged);
 
 	while(1)
 	{
@@ -117,4 +129,29 @@ void Read_IPSR_Reg(uint_32* value )
 			:[out] "=r" (*value) );
 
 	__asm("NOP  \n\t NOP \n\t NOP");
+}
+
+void switch_CPU_Access_Level(CPU_Access_Level Level)
+{
+// control REG
+//	[0] nPRIV Defines the Thread mode privilege level:
+//	0 = Privileged
+//	1 = Unprivileged.
+	switch(Level)
+	{
+	case privileged:
+		__asm("MRS r0 , CONTROL \n\t"
+				"LSR r0 , r0 ,#0x1 \n\t"
+				"LSL r0 , r0 ,#0x1 \n\t"
+				"MSR CONTROL , r0");
+		break;
+
+	case nonprivileged:
+		__asm("MRS r0 , CONTROL \n\t"
+				"ORR r0 , r0 ,#0x1 \n\t"
+				"MSR CONTROL , r0");
+		break;
+
+	}
+
 }
