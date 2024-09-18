@@ -29,6 +29,10 @@ uint_8 task1_bit=0;
 uint_8 task2_bit=0;
 uint_8 task3_bit=0;
 uint_8 task4_bit=0;
+Mutex_ref mutex1;
+uint_32 test_resource =10;
+
+
 void Read_Control_Reg(uint_32* value );
 void Read_IPSR_Reg(uint_32* value );
 
@@ -38,20 +42,43 @@ uint_8 svc_value ;
 
 void task1()
 {
+	static uint_32 counter =0;
 	while(1)
 	{
 		task1_bit ^=1;
+		counter++;
+if(counter == 100)
+{
+	MyRTOS_AcquireMutex(&mutex1, &Task1);
+	MyRTOS_ActivateTask(&Task2);
+}
+if(counter ==200)
+{
 
-		MyRTOS_TaskWating(100,&Task1);
+	counter=0;
+	MyRTOS_ReleaseMutex(&mutex1);
+}
+
 
 	}
 }
 void task2()
 {
+static uint_32 counter =0;
 	while(1)
 	{
 		task2_bit ^=1;
-		MyRTOS_TaskWating(200,&Task2);
+		counter++;
+		if(counter == 100)
+		{
+			MyRTOS_ActivateTask(&Task3);
+		}
+		if(counter ==200)
+		{
+			counter=0;
+			MyRTOS_TerminateTask(&Task2);
+		}
+
 	}
 }
 void task3()
@@ -61,13 +88,16 @@ void task3()
 	while(1)
 	{
 		task3_bit ^=1;
-		MyRTOS_TaskWating(100,&Task3);
-//		counter++;
-//		if(counter >=500)
-//		{
-//			counter=0;
-//			MyRTOS_ActivateTask(&Task4);
-//		}
+		counter++;
+		if(counter == 100)
+				{
+					MyRTOS_ActivateTask(&Task4);
+				}
+				if(counter ==200)
+				{
+					counter=0;
+					MyRTOS_TerminateTask(&Task3);
+				}
 	}
 }
 
@@ -77,12 +107,18 @@ void task4()
 	while(1)
 	{
 		task4_bit ^=1;
-//		counter++;
-//		if(counter >=500)
-//		{
-//			counter=0;
-//			MyRTOS_TerminateTask(&Task4);
-//		}
+		counter++;
+		if(counter == 10)
+		{
+			MyRTOS_AcquireMutex(&mutex1, &Task4);
+
+		}
+				if(counter ==200)
+				{
+					counter=0;
+					MyRTOS_ReleaseMutex(&mutex1);
+					MyRTOS_TerminateTask(&Task4);
+				}
 	}
 }
 
@@ -92,13 +128,16 @@ int main(void)
 	HW_init();
 	MyRTOS_init();
 
+	mutex1.Payload = &test_resource;
+	strcpy(mutex1.MutexName , "mutex1");
+
 	Task1.stack_size=512;
 	Task1.P_taskEntry =task1;
-	Task1.priorty =2;
+	Task1.priorty =4;
 	strcpy(Task1.TaskName , "task1");
 	Task2.stack_size=512;
 	Task2.P_taskEntry =task2;
-	Task2.priorty =2;
+	Task2.priorty =3;
 	strcpy(Task2.TaskName , "task2");
 
 	Task3.stack_size=512;
@@ -117,9 +156,11 @@ int main(void)
 	MyRTOS_CreateTask(&Task4);
 
 	MyRTOS_ActivateTask(&Task1);
-	MyRTOS_ActivateTask(&Task2);
-	MyRTOS_ActivateTask(&Task3);
+//	MyRTOS_ActivateTask(&Task2);
+//	MyRTOS_ActivateTask(&Task3);
 	MyRTOS_Start_OS();
+
+
 	while(1)
 	{
 

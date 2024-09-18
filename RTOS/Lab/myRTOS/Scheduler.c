@@ -535,3 +535,57 @@ void SysTick_Handler()
 	Decide_whatNext();
 	Trigger_OS_PendSV();
 }
+
+MyRTOS_ERROR_ID MyRTOS_AcquireMutex(Mutex_ref * Mref , Task_ref * Tref)
+{
+	MyRTOS_ERROR_ID ret = NOERROR;
+	if(Mref->Current_Task_User == NULL) // Mutex not teken by any task
+	{
+		Mref->Current_Task_User = Tref;
+	}
+	else
+	{
+		if(Mref->Next_Task_User == NULL) // not pending request by any other task
+		{
+			Mref->Next_Task_User = Tref;
+			MyRTOS_TerminateTask(Tref);
+		}
+		else
+		{
+			ret =  MUTEX_Reached_TO_MAX_NO_OF_User;
+		}
+	}
+
+	return ret;
+}
+void MyRTOS_ReleaseMutex(Mutex_ref * Mref)
+{
+	if(Mref->Current_Task_User != NULL)
+	{
+		Mref->Current_Task_User = Mref->Next_Task_User;
+		 Mref->Next_Task_User = NULL;
+		Mref->Current_Task_User->Task_State = Waiting;
+		MyRTOS_ActivateTask(Mref->Current_Task_User);
+	}
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -25,7 +25,8 @@ typedef enum
 {
 	SVC_ActivateTask,
 	SVC_TerminateTask,
-	SVC_TaskWaitingTime
+	SVC_TaskWaitingTime,
+	MUTEX_Reached_TO_MAX_NO_OF_User
 }SVC_ID;
 typedef struct
 {
@@ -56,7 +57,13 @@ typedef struct
 
 
 }Task_ref;
+typedef struct {
+	void * Payload;
+	Task_ref * Current_Task_User;
+	Task_ref * Next_Task_User;
+	uint_8 MutexName[30];
 
+}Mutex_ref;
 //APIs
 MyRTOS_ERROR_ID MyRTOS_init();
 MyRTOS_ERROR_ID MyRTOS_CreateTask (Task_ref * Tref);
@@ -64,5 +71,7 @@ void MyRTOS_ActivateTask(Task_ref * Tref);
 void MyRTOS_TerminateTask(Task_ref * Tref);
 void MyRTOS_Start_OS();
 void MyRTOS_TaskWating(uint_32 ticks,Task_ref * Tref);
+MyRTOS_ERROR_ID MyRTOS_AcquireMutex(Mutex_ref * Mref , Task_ref * Tref);
+void MyRTOS_ReleaseMutex(Mutex_ref * Mref);
 
 #endif /* INC_SCHEDULER_H_ */
