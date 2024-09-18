@@ -47,8 +47,8 @@
             <NotGenerated>0</NotGenerated>
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
-          <OutputDirectory>.\labs\Debug\</OutputDirectory>
-          <OutputName>Arm_labs</OutputName>
+          <OutputDirectory>.\svc_lab\Debug\</OutputDirectory>
+          <OutputName>svc_lab</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>0</CreateHexFile>

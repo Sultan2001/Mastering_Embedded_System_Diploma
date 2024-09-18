@@ -142,18 +142,82 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>55</LineNumber>
+          <LineNumber>0</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134218188</Address>
+          <Address>134218360</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
+          <Filename></Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>0x08000278</Expression>
+        </Bp>
+        <Bp>
+          <Number>1</Number>
+          <Type>0</Type>
+          <LineNumber>79</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134218276</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>D:\embeddedSystems\Mastering_Embedded_System_Diploma\ARM\svc_lab\Src\main.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\svc_lab\../Src/main.c\79</Expression>
+        </Bp>
+        <Bp>
+          <Number>2</Number>
+          <Type>0</Type>
+          <LineNumber>80</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134218292</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>D:\embeddedSystems\Mastering_Embedded_System_Diploma\ARM\svc_lab\Src\main.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\svc_lab\../Src/main.c\80</Expression>
+        </Bp>
+        <Bp>
+          <Number>3</Number>
+          <Type>0</Type>
+          <LineNumber>81</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134218308</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>D:\embeddedSystems\Mastering_Embedded_System_Diploma\ARM\svc_lab\Src\main.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\svc_lab\../Src/main.c\81</Expression>
+        </Bp>
+        <Bp>
+          <Number>4</Number>
+          <Type>0</Type>
+          <LineNumber>55</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>0</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>0</BreakIfRCount>
           <Filename>D:\embeddedSystems\Mastering_Embedded_System_Diploma\ARM\labs\Src\main.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\Arm_labs\../Src/main.c\55</Expression>
+          <Expression></Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
@@ -165,24 +229,27 @@
         <Ww>
           <count>1</count>
           <WinNumber>1</WinNumber>
-          <ItemText>val2,0x0A</ItemText>
+          <ItemText>svc_value,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>2</count>
           <WinNumber>1</WinNumber>
-          <ItemText>val3,0x0A</ItemText>
+          <ItemText>val2,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>3</count>
           <WinNumber>1</WinNumber>
-          <ItemText>val4,0x0A</ItemText>
-        </Ww>
-        <Ww>
-          <count>4</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>val5,0x0A</ItemText>
+          <ItemText>val3,0x0A</ItemText>
         </Ww>
       </WatchWindow1>
+      <MemoryWindow2>
+        <Mm>
+          <WinNumber>2</WinNumber>
+          <SubType>0</SubType>
+          <ItemText>0x200027c0</ItemText>
+          <AccSizeX>0</AccSizeX>
+        </Mm>
+      </MemoryWindow2>
       <Tracepoint>
         <THDelay>0</THDelay>
       </Tracepoint>
