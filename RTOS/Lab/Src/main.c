@@ -32,6 +32,9 @@ uint_8 task4_bit=0;
 Mutex_ref mutex1;
 uint_32 test_resource =10;
 
+Mutex_ref mutex2;
+uint_32 test_resource2 =20;
+
 
 void Read_Control_Reg(uint_32* value );
 void Read_IPSR_Reg(uint_32* value );
@@ -50,7 +53,8 @@ void task1()
 if(counter == 100)
 {
 	MyRTOS_AcquireMutex(&mutex1, &Task1);
-	MyRTOS_ActivateTask(&Task2);
+	MyRTOS_ActivateTask(&Task4);
+	MyRTOS_AcquireMutex(&mutex2, &Task1);
 }
 if(counter ==200)
 {
@@ -108,8 +112,10 @@ void task4()
 	{
 		task4_bit ^=1;
 		counter++;
+
 		if(counter == 10)
 		{
+			MyRTOS_AcquireMutex(&mutex2, &Task4);
 			MyRTOS_AcquireMutex(&mutex1, &Task4);
 
 		}
@@ -130,6 +136,9 @@ int main(void)
 
 	mutex1.Payload = &test_resource;
 	strcpy(mutex1.MutexName , "mutex1");
+
+	mutex2.Payload = &test_resource2;
+	strcpy(mutex2.MutexName , "mutex2");
 
 	Task1.stack_size=512;
 	Task1.P_taskEntry =task1;
