@@ -24,9 +24,11 @@
 Task_ref Task1;
 Task_ref Task2 ;
 Task_ref Task3;
+Task_ref Task4;
 uint_8 task1_bit=0;
 uint_8 task2_bit=0;
 uint_8 task3_bit=0;
+uint_8 task4_bit=0;
 void Read_Control_Reg(uint_32* value );
 void Read_IPSR_Reg(uint_32* value );
 
@@ -40,6 +42,8 @@ void task1()
 	{
 		task1_bit ^=1;
 
+		MyRTOS_TaskWating(100,&Task1);
+
 	}
 }
 void task2()
@@ -47,41 +51,71 @@ void task2()
 	while(1)
 	{
 		task2_bit ^=1;
-
+		MyRTOS_TaskWating(200,&Task2);
 	}
 }
 void task3()
 {
+	static uint_32 counter =0;
+
 	while(1)
 	{
 		task3_bit ^=1;
-
+		MyRTOS_TaskWating(100,&Task3);
+//		counter++;
+//		if(counter >=500)
+//		{
+//			counter=0;
+//			MyRTOS_ActivateTask(&Task4);
+//		}
 	}
 }
 
+void task4()
+{
+	static uint_32 counter =0;
+	while(1)
+	{
+		task4_bit ^=1;
+//		counter++;
+//		if(counter >=500)
+//		{
+//			counter=0;
+//			MyRTOS_TerminateTask(&Task4);
+//		}
+	}
+}
 
 int main(void)
 {
-//HW init , Clock tree , Reset Controller
+	//HW init , Clock tree , Reset Controller
 	HW_init();
-	 MyRTOS_init();
+	MyRTOS_init();
 
-		Task1.stack_size=1024;
-		Task1.P_taskEntry =task1;
-		Task1.priorty =2;
-		strcpy(Task1.TaskName , "task1");
-	Task2.stack_size=1024;
+	Task1.stack_size=512;
+	Task1.P_taskEntry =task1;
+	Task1.priorty =2;
+	strcpy(Task1.TaskName , "task1");
+	Task2.stack_size=512;
 	Task2.P_taskEntry =task2;
 	Task2.priorty =2;
 	strcpy(Task2.TaskName , "task2");
 
-	Task3.stack_size=1024;
+	Task3.stack_size=512;
 	Task3.P_taskEntry =task3;
 	Task3.priorty =2;
 	strcpy(Task3.TaskName , "task3");
+
+	Task4.stack_size=512;
+	Task4.P_taskEntry =task4;
+	Task4.priorty =1;
+	strcpy(Task4.TaskName , "task4");
+
 	MyRTOS_CreateTask(&Task1);
 	MyRTOS_CreateTask(&Task2);
 	MyRTOS_CreateTask(&Task3);
+	MyRTOS_CreateTask(&Task4);
+
 	MyRTOS_ActivateTask(&Task1);
 	MyRTOS_ActivateTask(&Task2);
 	MyRTOS_ActivateTask(&Task3);

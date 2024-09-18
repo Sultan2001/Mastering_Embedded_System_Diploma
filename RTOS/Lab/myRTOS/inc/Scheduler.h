@@ -63,4 +63,6 @@ MyRTOS_ERROR_ID MyRTOS_CreateTask (Task_ref * Tref);
 void MyRTOS_ActivateTask(Task_ref * Tref);
 void MyRTOS_TerminateTask(Task_ref * Tref);
 void MyRTOS_Start_OS();
+void MyRTOS_TaskWating(uint_32 ticks,Task_ref * Tref);
+
 #endif /* INC_SCHEDULER_H_ */

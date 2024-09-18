@@ -86,7 +86,7 @@ static void os_svc_set(SVC_ID ID )
 
 }
 static void Update_FIFO()
-				{
+{
 	Task_ref * Ptask;
 	Task_ref * PNextTask;
 	uint_32 i=0;
@@ -117,7 +117,7 @@ static void Update_FIFO()
 			 */
 
 			//This if we reach to the end of the scheduler table
-			if(PNextTask->Task_State == Suspend)
+			if(OS_Control.NO_Of_Active_Tasks == (i+1))
 			{
 				FIFO_Enqueue_Item(&Ready_Queue, Ptask);
 				Ptask->Task_State = Ready;
@@ -150,34 +150,34 @@ static void Update_FIFO()
 static void Decide_whatNext()
 {
 
-		//This in case The Queue is empty and OS_Control.CurrentTask->Task_State != Suspend_State
-		//This happen when we have only one task and this task is interrupting by svc
-		//we need to continue in running it
-		if(Ready_Queue.count == 0 && OS_Control.CurrentTask->Task_State != Suspend)
-		{
-			OS_Control.CurrentTask->Task_State = Running;
+	//This in case The Queue is empty and OS_Control.CurrentTask->Task_State != Suspend_State
+	//This happen when we have only one task and this task is interrupting by svc
+	//we need to continue in running it
+	if(Ready_Queue.count == 0 && OS_Control.CurrentTask->Task_State != Suspend)
+	{
+		OS_Control.CurrentTask->Task_State = Running;
 
-			//add Task to Ready Queue to run it till the task is terminate
+		//add Task to Ready Queue to run it till the task is terminate
+		FIFO_Enqueue_Item(&Ready_Queue, OS_Control.CurrentTask);
+		OS_Control.NextTask = OS_Control.CurrentTask;
+	}
+	else
+	{
+		//dequeue the top of ready queue because this is should running next
+		FIFO_Dequeue_Item(&Ready_Queue, &OS_Control.NextTask);
+		OS_Control.NextTask->Task_State = Running;
+
+		//check if the next task priority is equal the current task priority to work with Round Robin Algorithm
+		//check if the user doesn't terminate the current task so we will run it
+		if((OS_Control.CurrentTask->priorty == OS_Control.NextTask->priorty) && (OS_Control.CurrentTask->Task_State != Suspend))
+		{
+			//enqueue the current task in the Ready Queue so that the other task will be on top and current will be after it
+			//we do this because we run with Round Robin Algorithm
 			FIFO_Enqueue_Item(&Ready_Queue, OS_Control.CurrentTask);
-			OS_Control.NextTask = OS_Control.CurrentTask;
-		}
-		else
-		{
-			//dequeue the top of ready queue because this is should running next
-			FIFO_Dequeue_Item(&Ready_Queue, &OS_Control.NextTask);
-			OS_Control.NextTask->Task_State = Running;
-
-			//check if the next task priority is equal the current task priority to work with Round Robin Algorithm
-			//check if the user doesn't terminate the current task so we will run it
-			if((OS_Control.CurrentTask->priorty == OS_Control.NextTask->priorty) && (OS_Control.CurrentTask->Task_State != Suspend))
-			{
-				//enqueue the current task in the Ready Queue so that the other task will be on top and current will be after it
-				//we do this because we run with Round Robin Algorithm
-				FIFO_Enqueue_Item(&Ready_Queue, OS_Control.CurrentTask);
-				OS_Control.CurrentTask->Task_State = Ready;
-			}
+			OS_Control.CurrentTask->Task_State = Ready;
 		}
 	}
+}
 
 void BubbleSort()
 {
@@ -249,7 +249,7 @@ void OS_SVC(uint_32 * Stack_frame)
 
 		break;
 	case SVC_TaskWaitingTime :
-
+		MYRTOS_Update_Schadule_Tables();
 		break;
 	}
 
@@ -271,7 +271,7 @@ static void MyRTOS_idelTask()
 {
 	while(1)
 	{
-		__asm("NOP");
+		__asm("WFE");
 
 	}
 }
@@ -360,42 +360,49 @@ void MyRTOS_TerminateTask(Task_ref * Tref)
 	Tref->Task_State = Suspend;
 	os_svc_set(SVC_TerminateTask);
 }
+void MyRTOS_TaskWating(uint_32 ticks,Task_ref * Tref)
+{
+	Tref->Task_State = Suspend;
+	Tref->TimingWaiting.Ticks_count=ticks;
+	Tref->TimingWaiting.Blocking=Enable;
+	os_svc_set(SVC_TerminateTask);
+}
 
 __attribute ((naked)) void PendSV_Handler(void)
 {
 	// Restore reg for current task
 
 	/*
-		 * 1. Get the Current_PSP from CPU registers
-		 * |-------|
-		 * |  xPSR |
-		 * |  PC   |
-		 * |  LR   |
-		 * |  R12  |
-		 * |  R3   |
-		 * |  R2   |
-		 * |  R1   |
-		 * |  R0   |	<-- Current PSP
-		 * |-------|
-		 */
+	 * 1. Get the Current_PSP from CPU registers
+	 * |-------|
+	 * |  xPSR |
+	 * |  PC   |
+	 * |  LR   |
+	 * |  R12  |
+	 * |  R3   |
+	 * |  R2   |
+	 * |  R1   |
+	 * |  R0   |	<-- Current PSP
+	 * |-------|
+	 */
 	OS_Get_PSP(OS_Control.CurrentTask->Current_PSP)	;
 
 	/*
-		 * 2. Save the registers from R4 to R11
-		 * |-------|
-		 * |  R4   |
-		 * |  R5   |
-		 * |  R6   |
-		 * |  R7   |
-		 * |  R8   |
-		 * |  R9   |
-		 * |  R10  |
-		 * |  R11  |
-		 * |-------|
-		 */
+	 * 2. Save the registers from R4 to R11
+	 * |-------|
+	 * |  R4   |
+	 * |  R5   |
+	 * |  R6   |
+	 * |  R7   |
+	 * |  R8   |
+	 * |  R9   |
+	 * |  R10  |
+	 * |  R11  |
+	 * |-------|
+	 */
 
 
-OS_Control.CurrentTask->Current_PSP--;
+	OS_Control.CurrentTask->Current_PSP--;
 	__asm volatile ("MOV %[OUT], R4" : [OUT] "=r" ((*OS_Control.CurrentTask->Current_PSP))); //R4
 
 	OS_Control.CurrentTask->Current_PSP--;
@@ -420,56 +427,56 @@ OS_Control.CurrentTask->Current_PSP--;
 	__asm volatile ("MOV %[OUT], R11" : [OUT] "=r" ((*OS_Control.CurrentTask->Current_PSP))); //R11
 
 
-//Restore The Context of the Next task
+	//Restore The Context of the Next task
 	if(OS_Control.NextTask != NULL)
-		{
-			OS_Control.CurrentTask = OS_Control.NextTask;
-			OS_Control.NextTask = NULL;
-		}
+	{
+		OS_Control.CurrentTask = OS_Control.NextTask;
+		OS_Control.NextTask = NULL;
+	}
 
-		/*
-		 * 1. Write the values of registers from memory to CPU registers
-		 * |-------|
-		 * |  R4   |
-		 * |  R5   |
-		 * |  R6   |
-		 * |  R7   |
-		 * |  R8   |
-		 * |  R9   |
-		 * |  R10  |
-		 * |  R11  |		<-- Current_PSP_Task
-		 * |-------|
-		 */
-		__asm volatile ("MOV R11, %[IN]" : : [IN] "r" ((*OS_Control.CurrentTask->Current_PSP))); //R11
-		OS_Control.CurrentTask->Current_PSP++;
+	/*
+	 * 1. Write the values of registers from memory to CPU registers
+	 * |-------|
+	 * |  R4   |
+	 * |  R5   |
+	 * |  R6   |
+	 * |  R7   |
+	 * |  R8   |
+	 * |  R9   |
+	 * |  R10  |
+	 * |  R11  |		<-- Current_PSP_Task
+	 * |-------|
+	 */
+	__asm volatile ("MOV R11, %[IN]" : : [IN] "r" ((*OS_Control.CurrentTask->Current_PSP))); //R11
+	OS_Control.CurrentTask->Current_PSP++;
 
-		__asm volatile ("MOV R10, %[IN]" : : [IN] "r" ((*OS_Control.CurrentTask->Current_PSP))); //R10
-		OS_Control.CurrentTask->Current_PSP++;
+	__asm volatile ("MOV R10, %[IN]" : : [IN] "r" ((*OS_Control.CurrentTask->Current_PSP))); //R10
+	OS_Control.CurrentTask->Current_PSP++;
 
-		__asm volatile ("MOV R9, %[IN]" : : [IN] "r" ((*OS_Control.CurrentTask->Current_PSP))); //R9
-		OS_Control.CurrentTask->Current_PSP++;
+	__asm volatile ("MOV R9, %[IN]" : : [IN] "r" ((*OS_Control.CurrentTask->Current_PSP))); //R9
+	OS_Control.CurrentTask->Current_PSP++;
 
-		__asm volatile ("MOV R8, %[IN]" : : [IN] "r" ((*OS_Control.CurrentTask->Current_PSP))); //R8
-		OS_Control.CurrentTask->Current_PSP++;
+	__asm volatile ("MOV R8, %[IN]" : : [IN] "r" ((*OS_Control.CurrentTask->Current_PSP))); //R8
+	OS_Control.CurrentTask->Current_PSP++;
 
-		__asm volatile ("MOV R7, %[IN]" : : [IN] "r" ((*OS_Control.CurrentTask->Current_PSP))); //R7
-		OS_Control.CurrentTask->Current_PSP++;
+	__asm volatile ("MOV R7, %[IN]" : : [IN] "r" ((*OS_Control.CurrentTask->Current_PSP))); //R7
+	OS_Control.CurrentTask->Current_PSP++;
 
-		__asm volatile ("MOV R6, %[IN]" : : [IN] "r" ((*OS_Control.CurrentTask->Current_PSP))); //R6
-		OS_Control.CurrentTask->Current_PSP++;
+	__asm volatile ("MOV R6, %[IN]" : : [IN] "r" ((*OS_Control.CurrentTask->Current_PSP))); //R6
+	OS_Control.CurrentTask->Current_PSP++;
 
-		__asm volatile ("MOV R5, %[IN]" : : [IN] "r" ((*OS_Control.CurrentTask->Current_PSP))); //R5
-		OS_Control.CurrentTask->Current_PSP++;
+	__asm volatile ("MOV R5, %[IN]" : : [IN] "r" ((*OS_Control.CurrentTask->Current_PSP))); //R5
+	OS_Control.CurrentTask->Current_PSP++;
 
-		__asm volatile ("MOV R4, %[IN]" : : [IN] "r" ((*OS_Control.CurrentTask->Current_PSP))); //R4
-		OS_Control.CurrentTask->Current_PSP++;
+	__asm volatile ("MOV R4, %[IN]" : : [IN] "r" ((*OS_Control.CurrentTask->Current_PSP))); //R4
+	OS_Control.CurrentTask->Current_PSP++;
 
-		/*
-		 * 2.Set PSP with Current_PSP
-		 */
-		OS_Set_PSP(OS_Control.CurrentTask->Current_PSP);
+	/*
+	 * 2.Set PSP with Current_PSP
+	 */
+	OS_Set_PSP(OS_Control.CurrentTask->Current_PSP);
 
-		__asm("BX LR");
+	__asm("BX LR");
 
 }
 
@@ -478,33 +485,53 @@ OS_Control.CurrentTask->Current_PSP--;
 void MyRTOS_Start_OS()
 {
 	//Enter the OS in Running Mode instead of Suspend Mode
-		OS_Control.OSmodeID= OSRuning;
+	OS_Control.OSmodeID= OSRuning;
 
-		//Set Default Task --> IDLE Task
-		OS_Control.CurrentTask = &MyRTOS_IdelTask;
+	//Set Default Task --> IDLE Task
+	OS_Control.CurrentTask = &MyRTOS_IdelTask;
 
-		//Activate IDLE Task --> Run IDLE Task
-		MyRTOS_ActivateTask(&MyRTOS_IdelTask);
+	//Activate IDLE Task --> Run IDLE Task
+	MyRTOS_ActivateTask(&MyRTOS_IdelTask);
 
-		//Start Ticker --> 1ms
-		OS_Start_Ticker();
+	//Start Ticker --> 1ms
+	OS_Start_Ticker();
 
 
-		//Set PSP with PSP of Current Task
-		OS_Set_PSP(OS_Control.CurrentTask->Current_PSP);
+	//Set PSP with PSP of Current Task
+	OS_Set_PSP(OS_Control.CurrentTask->Current_PSP);
 
-		//Set SP shadow to PSP instead of MSP
-		OS_SWITCH_SP_to_PSP;
+	//Set SP shadow to PSP instead of MSP
+	OS_SWITCH_SP_to_PSP;
 
-		//Switch from Privileged to Unprivileged
-		OS_Switch_to_Unprivileged;
+	//Switch from Privileged to Unprivileged
+	OS_Switch_to_Unprivileged;
 
-		//Run Current Task
-		OS_Control.CurrentTask->P_taskEntry();
+	//Run Current Task
+	OS_Control.CurrentTask->P_taskEntry();
+}
+void MyRTOS_Update_TaskWaitingTime()
+{
+	for(int i =0 ; i< OS_Control.NO_Of_Active_Tasks ; i++)
+	{
+		if(OS_Control.OSTasks[i]->Task_State == Suspend)
+		{
+			if(OS_Control.OSTasks[i]->TimingWaiting.Blocking == Enable)
+			{
+				OS_Control.OSTasks[i]->TimingWaiting.Ticks_count--;
+				if(OS_Control.OSTasks[i]->TimingWaiting.Ticks_count == 0)
+				{
+					OS_Control.OSTasks[i]->TimingWaiting.Blocking  = Disable;
+					OS_Control.OSTasks[i]->Task_State = Waiting;
+					os_svc_set(SVC_TaskWaitingTime);
+				}
+			}
+		}
+	}
 }
 void SysTick_Handler()
 
 {
+	MyRTOS_Update_TaskWaitingTime();
 	Decide_whatNext();
 	Trigger_OS_PendSV();
 }
